@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-arduino-uno",
+      "id": "uno1",
+      "top": 60,
+      "left": 10,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": 401.8,
+      "left": 304.2,
+      "attrs": {
+        "pins": "i2c"
+      }
+    },
+    {
+      "type": "wokwi-logic-analyzer",
+      "id": "logic1",
+      "top": 280.55,
+      "left": 298.6,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "uno1:A5",
+      "lcd1:SCL",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "lcd1:SDA",
+      "uno1:A4",
+      "green",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "uno1:A5",
+      "logic1:D1",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "uno1:A4",
+      "logic1:D0",
+      "green",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "lcd1:VCC",
+      "uno1:5V",
+      "red",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "lcd1:GND",
+      "uno1:GND.2",
+      "black",
+      [
+        "h0"
+      ]
+    ]
+  ],
+  "dependencies": {}
+}
