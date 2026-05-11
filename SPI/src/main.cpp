@@ -1,18 +1,23 @@
 #include <Arduino.h>
-#include <SPI.h>
 
 void setup() {
-  pinMode(SS, OUTPUT);
-  digitalWrite(SS, HIGH);
+  // Set SS (PB2), MOSI (PB3), and SCK (PB5) as output
+  DDRB |= (1 << PB2) | (1 << PB3) | (1 << PB5);
+  // SS HIGH
+  PORTB |= (1 << PB2);
   
-  SPI.begin();
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  // Enable SPI, Master, set clock rate fck/4 (4 MHz at 16 MHz)
+  SPCR = (1 << SPE) | (1 << MSTR);
 
-  digitalWrite(SS, LOW);
-  SPI.transfer('H');
-  digitalWrite(SS, HIGH);
+  // SS LOW
+  PORTB &= ~(1 << PB2);
   
-  SPI.endTransaction();
+  // Transfer 'H'
+  SPDR = 'H';
+  while (!(SPSR & (1 << SPIF)));
+  
+  // SS HIGH
+  PORTB |= (1 << PB2);
 }
 
 void loop() {}
