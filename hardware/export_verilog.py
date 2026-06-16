@@ -9,7 +9,8 @@ sys.path.append(os.path.abspath("./SPI"))
 sys.path.append(os.path.abspath("./UART"))
 
 from amaranth.back import verilog
-from SPI.main import SPIMaster, SPISlave
+from SPI.SPI_master import SPIMaster
+from SPI.SPI_slave import SPISlave
 from I2C.I2C_master import I2CMaster
 from I2C.I2C_slave import I2CSlave
 from UART.main import UART
@@ -22,9 +23,18 @@ def export_module(module, ports, filename):
             f.write(verilog_code)
         print("Success!")
     except Exception as e:
-        print(f"Failed to export {module.__class__.__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
 
 if __name__ == "__main__":
+    # Setup environment paths for OSS CAD Suite so Amaranth can find Yosys
+    oss_root = r"C:\_dev\oss-cad-suite"
+    oss_bin = os.path.join(oss_root, "bin")
+    oss_lib = os.path.join(oss_root, "lib")
+    os.environ["YOSYSHQ_ROOT"] = oss_root
+    os.environ["PATH"] = f"{oss_bin};{oss_lib};" + os.environ.get("PATH", "")
+
     os.makedirs("verilog_export", exist_ok=True)
 
     # 1. SPI Master
