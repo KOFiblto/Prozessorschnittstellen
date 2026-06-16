@@ -16,54 +16,31 @@ class UART(Elaboratable):
     def elaborate(self, platform):
         m = Module()
 
-        tx_clk_count = Signal(range(self.clks_per_bit))
-        tx_bit_count = Signal(range(8))
-        tx_reg = Signal(8)
+        tx_frame = Signal(10, reset=0x3ff)
+        tx_bit_cnt = Signal(range(11))
+        tx_clk_cnt = Signal(range(self.clks_per_bit))
 
-        with m.FSM(name="tx_state"):
-            with m.State("IDLE"):
+        m.d.comb += self.tx.eq(tx_frame[0])
+
+        with m.If(self.tx_ready):
+            with m.If(self.tx_start):
                 m.d.sync += [
-                    self.tx.eq(1),
-                    self.tx_ready.eq(1),
-                    tx_clk_count.eq(0),
-                    tx_bit_count.eq(0)
+                    self.tx_ready.eq(0),
+                    tx_frame.eq(Cat(0, self.tx_data, 1)),
+                    tx_clk_cnt.eq(0),
+                    tx_bit_cnt.eq(0)
                 ]
-                with m.If(self.tx_start):
-                    m.d.sync += [
-                        self.tx_ready.eq(0),
-                        tx_reg.eq(self.tx_data)
-                    ]
-                    m.next = "START"
-            
-            with m.State("START"):
-                m.d.sync += self.tx.eq(0)
-                with m.If(tx_clk_count < self.clks_per_bit - 1):
-                    m.d.sync += tx_clk_count.eq(tx_clk_count + 1)
+        with m.Else():
+            with m.If(tx_clk_cnt < self.clks_per_bit - 1):
+                m.d.sync += tx_clk_cnt.eq(tx_clk_cnt + 1)
+            with m.Else():
+                m.d.sync += tx_clk_cnt.eq(0)
+                m.d.sync += tx_frame.eq(Cat(tx_frame[1:10], 1))
+                with m.If(tx_bit_cnt < 9):
+                    m.d.sync += tx_bit_cnt.eq(tx_bit_cnt + 1)
                 with m.Else():
-                    m.d.sync += tx_clk_count.eq(0)
-                    m.next = "DATA"
-
-            with m.State("DATA"):
-                m.d.sync += self.tx.eq(tx_reg[0])
-                with m.If(tx_clk_count < self.clks_per_bit - 1):
-                    m.d.sync += tx_clk_count.eq(tx_clk_count + 1)
-                with m.Else():
-                    m.d.sync += tx_clk_count.eq(0)
-                    m.d.sync += tx_reg.eq(tx_reg >> 1)
-                    with m.If(tx_bit_count < 7):
-                        m.d.sync += tx_bit_count.eq(tx_bit_count + 1)
-                    with m.Else():
-                        m.d.sync += tx_bit_count.eq(0)
-                        m.next = "STOP"
-
-            with m.State("STOP"):
-                m.d.sync += self.tx.eq(1)
-                with m.If(tx_clk_count < self.clks_per_bit - 1):
-                    m.d.sync += tx_clk_count.eq(tx_clk_count + 1)
-                with m.Else():
-                    m.d.sync += tx_clk_count.eq(0)
                     m.d.sync += self.tx_ready.eq(1)
-                    m.next = "IDLE"
+
 
         rx_clk_count = Signal(range(self.clks_per_bit))
         rx_bit_count = Signal(range(8))
